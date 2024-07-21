@@ -5,6 +5,7 @@ using OpenQA.Selenium.Support.UI;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
+using OpenQA.Selenium.Interactions;
 namespace WebDriverTask3
 {
     public class Tests
@@ -14,6 +15,7 @@ namespace WebDriverTask3
         public void Setup()
         {
             driver = new ChromeDriver();
+            driver.Manage().Window.Maximize();
             driver.Navigate().GoToUrl("https://cloud.google.com/products/calculator");
 
             driver.FindElement(By.CssSelector("button.xhASFc")).Click();
@@ -35,79 +37,70 @@ namespace WebDriverTask3
             {
                 buttons = driver.FindElements(By.CssSelector("div.YgByBe"));
             }
+            IWebElement result11 = buttons[6], result12 = buttons[8], result13 = buttons[9];
 
-            IWebElement result11 = buttons[0], result12 = buttons[0], result21 = buttons[0], result22 = buttons[0];
-            bool found = false;
-            bool found1 = false;
-            foreach (var button in buttons)
-            {
-                if (found && found1)
-                {
-                    break;
-                }
-                foreach (var span in button.FindElements(By.TagName("span")))
-                {
-                    if (span.Text.Equals("GPU Model"))
-                    {
-                        result11 = button;
-                        found = true;
-                        break;
-                    }
-                    if (span.Text.Equals("Local SSD"))
-                    {
-                        result12 = button;
-                        found1 = true;
-                        break;
-                    }
-                }
-            }
             result11.Click();
             var lists = driver.FindElements(By.CssSelector("ul.VfPpkd-OJnkse"));
             while (lists.Count < 11)
             {
                 lists = driver.FindElements(By.CssSelector("ul.VfPpkd-OJnkse"));
             }
-            found = false;
-            found1 = false;
-            bool wrong = true;
-            foreach (var list in lists)
+            IWebElement result21 = lists[7], result22 = lists[9], result23 = lists[10];
+
+            foreach (var span in result21.FindElements(By.TagName("li")))
             {
-                if (found && found1)
+                if (span.GetAttribute("data-value").Equals("nvidia-tesla-v100"))
                 {
+                    span.Click();
                     break;
                 }
-                foreach (var span in list.FindElements(By.TagName("li")))
-                {
-                    if (span.GetAttribute("data-value").Equals("0"))
-                    {
-                        wrong = false;
-                    }
-                    if (span.GetAttribute("data-value").Equals("nvidia-tesla-v100"))
-                    {
-                        result21 = span;
-                        found = true;
-                        break;
-                    }
-                    if (span.GetAttribute("data-value").Equals("2") && !wrong)
-                    {
-                        result22 = span;
-                        found1 = true;
-                        break;
-                    }
-                }
             }
-            
-            result21.Click();
 
             result12.Click();
-            result22.Click();
+            foreach (var span in result22.FindElements(By.TagName("li")))
+            {
+                if (span.GetAttribute("data-value").Equals("2"))
+                {
+                    span.Click();
+                    break;
+                }
+            }
+
+            result13.Click();
+            foreach (var span in result23.FindElements(By.TagName("li")))
+            {
+                if (span.GetAttribute("data-value").Equals("europe-west4"))
+                {
+                    span.Click();
+                    break;
+                }
+            }
             Thread.Sleep(1000);
+            driver.FindElements(By.CssSelector("div.OCM48"))[0].FindElement(By.CssSelector("div.VfPpkd-dgl2Hf-ppHlrf-sM5MNb")).FindElement(By.TagName("button")).Click(); 
+
+            driver.FindElements(By.CssSelector("div.v08BQe"))[0].FindElement(By.CssSelector("a.tltOzc")).Click();
+
+            IReadOnlyCollection<string> windowHandles = driver.WindowHandles;
+            foreach (string handle in windowHandles)
+            {
+                if (handle != driver.CurrentWindowHandle)
+                {
+                    driver.SwitchTo().Window(handle);
+                    break;
+                }
+            }
         }
 
         [Test]
-        public void Test1()
+        public void Verify()
         {
-            Assert.Pass();
+            var text = driver.FindElements(By.CssSelector("span.Kfvdz"));
+            Assert.That(text[2].Text, Is.EqualTo("n1-standard-8, vCPUs: 8, RAM: 30 GB"));
+            Assert.That(text[4].Text, Is.EqualTo("NVIDIA V100"));
+            Assert.That(text[6].Text, Is.EqualTo("2x375 GB"));
+            Assert.That(text[10].Text, Is.EqualTo("Free: Debian, CentOS, CoreOS, Ubuntu or BYOL (Bring Your Own License)"));
+            Assert.That(text[11].Text, Is.EqualTo("Regular"));
+            Assert.That(text[17].Text, Is.EqualTo("Netherlands (europe-west4)"));
         }
         [OneTimeTearDown]
         public void TearDown()
